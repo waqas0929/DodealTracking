@@ -82,6 +82,18 @@ class CommandExecutor(
             CommandStatus.EXECUTED to "single location captured"
         }
         CommandType.REFRESH_DEVICE_INFO -> CommandStatus.EXECUTED to "device info refreshed"
+
+        // Reachability check. The ack IS the answer, so there is nothing else to do — and it must
+        // stay side-effect free, or "is this phone alive?" would start changing the phone.
+        CommandType.PING -> CommandStatus.EXECUTED to "pong"
+
+        // Rebuild the location session from the current policy. Used when a handset is reporting
+        // but the CRM can see the settings it applied are not the ones in force.
+        CommandType.RESTART_TRACKING -> {
+            locationController.restart()
+            CommandStatus.EXECUTED to "tracking restarted"
+        }
+
         CommandType.UNKNOWN -> CommandStatus.FAILED to "unknown command"
     }
 }

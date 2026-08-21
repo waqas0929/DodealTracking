@@ -1,6 +1,9 @@
 package com.dodeal.deviceagent.data.api.dto
 
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.Serializable
 
 /** POST /api/device/heartbeat (spec §15). */
@@ -30,24 +33,56 @@ data class DodealEventRequest(
     @SerialName("metadata") val metadata: Map<String, String> = emptyMap(),
 )
 
-/** GET /api/device/commands (spec §16). */
+/**
+ * GET /api/device/commands.
+ *
+ * Field names follow the SERVER, not the spec the app was first written against — the two had
+ * drifted and every poll died on the difference:
+ *   - the server's field is `command`, the spec said `type`. A missing required field threw, so the
+ *     whole response failed to parse and SafeApiCall swallowed it: commands simply never arrived.
+ *   - the server's field is `payload`, the spec said `parameters`.
+ *   - `command_id` arrives as a NUMBER; it stays a String here (ids are opaque) and ApiJson's
+ *     lenient mode reads the unquoted value.
+ *
+ * `payload` is typed as a raw JsonElement because the server may send null, an object, or a plain
+ * string, and a command must never be lost to the shape of its own payload.
+ */
 @Serializable
 data class DodealCommandResponse(
     @SerialName("command_id") val commandId: String,
-    @SerialName("type") val type: String,
+    @SerialName("command") val type: String,
     @SerialName("issued_at") val issuedAt: String = "",
-    @SerialName("parameters") val parameters: Map<String, String> = emptyMap(),
-)
+    @SerialName("expires_at") val expiresAt: String? = null,
+    @SerialName("payload") val payload: JsonElement? = null,
+) {
+    /**
+     * The payload flattened to the string map the executor expects. A payload that is not a flat
+     * object (null, a bare string, nested values) yields an empty map rather than an error: no
+     * command in the server's vocabulary needs one, so a surprise here must not stop execution.
+     */
+    val parameters: Map<String, String>
+        get() = (payload as? JsonObject)
+            ?.mapNotNull { (key, value) -> (value as? JsonPrimitive)?.let { key to it.content } }
+            ?.toMap()
+            .orEmpty()
+}
 
 @Serializable
 data class DodealCommandListResponse(
     @SerialName("commands") val commands: List<DodealCommandResponse> = emptyList(),
 )
 
-/** POST /api/device/commands/{command_id}/ack (spec §16). */
+/**
+ * POST /api/device/commands/{command_id}/ack.
+ *
+ * `success` is the field the server actually reads, and it defaults to TRUE when absent — so an ack
+ * that only carried `status: "FAILED"` was recorded as executed. The status and both timestamps are
+ * still sent; the server ignores what it does not use, and they cost nothing to keep.
+ */
 @Serializable
 data class DodealCommandAckRequest(
     @SerialName("command_id") val commandId: String,
+    @SerialName("success") val success: Boolean,
     @SerialName("status") val status: String,
     @SerialName("received_at") val receivedAt: String,
     @SerialName("executed_at") val executedAt: String,

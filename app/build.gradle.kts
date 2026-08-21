@@ -128,4 +128,11 @@ dependencies {
 
     // Location engine (milestone 2).
     implementation(libs.play.services.location)
+
+    // Unit tests run on the JVM: no emulator, no Android framework, so the whole
+    // suite is one fast command. Anything needing a device belongs in
+    // androidTest, deliberately kept empty for now.
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlinx.serialization.json)
 }

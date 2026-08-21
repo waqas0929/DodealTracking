@@ -32,9 +32,32 @@ data class DeviceEvent(
     val metadata: Map<String, String> = emptyMap(),
 )
 
-/** Fixed, safe management command set. No arbitrary/remote execution. */
-enum class CommandType {
-    REFRESH_POLICY, UPLOAD_PENDING_DATA, REQUEST_SINGLE_LOCATION, SYNC_NOW, REFRESH_DEVICE_INFO, UNKNOWN
+/**
+ * Fixed, safe management command set. No arbitrary/remote execution.
+ *
+ * The wire names come from the SERVER's allow-list (config/device_tracking.php); where the two
+ * vocabularies used different words for the same action, the server's word is an alias rather than
+ * a rename, so an older queued command still executes. Anything unrecognised is UNKNOWN and is
+ * acknowledged as failed — never silently ignored.
+ */
+enum class CommandType(private vararg val wireNames: String) {
+    REFRESH_POLICY("REFRESH_POLICY"),
+    UPLOAD_PENDING_DATA("UPLOAD_PENDING", "UPLOAD_PENDING_DATA"),
+    REQUEST_SINGLE_LOCATION("REQUEST_SINGLE_LOCATION"),
+    SYNC_NOW("SYNC_NOW"),
+    REFRESH_DEVICE_INFO("REFRESH_DEVICE_INFO"),
+    PING("PING"),
+    RESTART_TRACKING("RESTART_TRACKING"),
+    UNKNOWN;
+
+    companion object {
+        /** Resolve a server command name. Case-insensitive; unknown names never throw. */
+        fun fromWire(name: String?): CommandType {
+            val wanted = name?.trim()?.uppercase().orEmpty()
+            if (wanted.isEmpty()) return UNKNOWN
+            return entries.firstOrNull { type -> type.wireNames.any { it == wanted } } ?: UNKNOWN
+        }
+    }
 }
 
 data class DeviceCommand(

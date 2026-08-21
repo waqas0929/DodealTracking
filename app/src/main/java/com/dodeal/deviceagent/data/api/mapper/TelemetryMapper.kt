@@ -7,6 +7,7 @@ import com.dodeal.deviceagent.data.api.dto.DodealGeofenceEventRequest
 import com.dodeal.deviceagent.data.api.dto.DodealHeartbeatRequest
 import com.dodeal.deviceagent.data.api.dto.DodealMeetingRequest
 import com.dodeal.deviceagent.domain.model.CommandAck
+import com.dodeal.deviceagent.domain.model.CommandStatus
 import com.dodeal.deviceagent.domain.model.CommandType
 import com.dodeal.deviceagent.domain.model.DeviceCommand
 import com.dodeal.deviceagent.domain.model.DeviceEvent
@@ -43,6 +44,8 @@ object TelemetryMapper {
 
     fun toDto(a: CommandAck) = DodealCommandAckRequest(
         commandId = a.commandId,
+        // The field the server reads. Absent means true there, so a failure must say so explicitly.
+        success = a.status != CommandStatus.FAILED,
         status = a.status.name,
         receivedAt = a.receivedAt.toString(),
         executedAt = a.executedAt.toString(),
@@ -51,7 +54,7 @@ object TelemetryMapper {
 
     fun toDomain(dto: DodealCommandResponse) = DeviceCommand(
         commandId = dto.commandId,
-        type = runCatching { CommandType.valueOf(dto.type.uppercase()) }.getOrDefault(CommandType.UNKNOWN),
+        type = CommandType.fromWire(dto.type),
         issuedAt = runCatching { Instant.parse(dto.issuedAt) }.getOrDefault(Instant.now()),
         parameters = dto.parameters,
     )

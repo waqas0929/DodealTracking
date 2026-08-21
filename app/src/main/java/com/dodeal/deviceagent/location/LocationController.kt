@@ -32,4 +32,16 @@ class LocationController(
     }
 
     fun stop() = LocationForegroundService.stop(appContext)
+
+    /**
+     * Tear the location session down and bring it back under the CURRENT policy.
+     *
+     * `sync()` is not enough for this: if the service is already running it stays running with the
+     * settings it started with, which is exactly the state the RESTART_TRACKING command exists to
+     * clear — a handset that is reporting, but not on the interval or accuracy the CRM set.
+     */
+    fun restart() {
+        stop()
+        sync()
+    }
 }

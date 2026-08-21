@@ -11,7 +11,10 @@ data class DodealPolicyResponse(
     @SerialName("timezone") val timezone: String = "Asia/Dubai",
     @SerialName("working_hours") val workingHours: Map<String, DodealWorkingWindow> = emptyMap(),
     @SerialName("location_interval_seconds") val locationIntervalSeconds: Int = 60,
-    @SerialName("minimum_distance_meters") val minimumDistanceMeters: Int = 20,
+    // The server's field is distance_filter_meters. Reading minimum_distance_meters meant this
+    // silently stayed at the app's own 20 m and whatever the CRM configured did nothing. The
+    // default follows the server's default (0 = report on the interval alone).
+    @SerialName("distance_filter_meters") val minimumDistanceMeters: Int = 0,
     @SerialName("high_accuracy_enabled") val highAccuracyEnabled: Boolean = true,
     @SerialName("heartbeat_interval_seconds") val heartbeatIntervalSeconds: Int = 300,
     @SerialName("batch_upload_interval_seconds") val batchUploadIntervalSeconds: Int = 900,

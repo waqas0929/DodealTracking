@@ -2,7 +2,6 @@ package com.dodeal.deviceagent.data.http
 
 import com.dodeal.deviceagent.config.ApiConfig
 import com.dodeal.deviceagent.config.LoggingLevel
-import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -16,11 +15,9 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
  */
 object HttpClientFactory {
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        explicitNulls = false
-        encodeDefaults = true
-    }
+    // One shared parser, so a unit test checks DTOs against the SAME configuration
+    // Retrofit uses. See ApiJson for why isLenient matters here.
+    private val json = ApiJson.instance
 
     /** Device/tenant client: auth + any extra interceptors (e.g. the tenant host rewriter). */
     fun okHttpClient(
