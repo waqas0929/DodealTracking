@@ -25,6 +25,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.dodeal.deviceagent.DodealAgentApp
+import com.dodeal.deviceagent.work.AgentScheduler
 import com.dodeal.deviceagent.R
 import com.dodeal.deviceagent.diagnostics.AgentLog
 import com.dodeal.deviceagent.diagnostics.TrackLog
@@ -193,6 +194,9 @@ class LocationForegroundService : Service() {
                 .onFailure { TrackLog.e("POLICY_SYNC_FAILED", it) }
             app.container.deviceRepository.cachedPolicy()?.let {
                 TrackLog.i("POLICY_LOADED v=${it.policyVersion} tracking=${it.trackingEnabled}")
+                // A fresh policy may carry a new heartbeat or flush cadence; re-schedule so the
+                // change lands now rather than at the next reboot.
+                AgentScheduler.apply(this@LocationForegroundService, it)
             }
         } else {
             TrackLog.i("POLICY_LOADED v=${cached.policyVersion} tracking=${cached.trackingEnabled}")

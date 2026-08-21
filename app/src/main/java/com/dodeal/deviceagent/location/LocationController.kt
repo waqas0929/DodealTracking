@@ -3,6 +3,7 @@ package com.dodeal.deviceagent.location
 import android.content.Context
 import com.dodeal.deviceagent.diagnostics.AgentLog
 import com.dodeal.deviceagent.domain.repository.DeviceRepository
+import com.dodeal.deviceagent.work.AgentScheduler
 
 /**
  * Decides whether the location service should run and starts/stops it. Rule: track only when the
@@ -22,6 +23,16 @@ class LocationController(
     }
 
     fun sync() { if (shouldTrack()) start() else stop() }
+
+    /**
+     * Apply everything a freshly fetched policy implies: the background cadence AND the location
+     * session. Call this after a policy sync instead of sync() alone — heartbeat and flush periods
+     * live in the policy too, and before this they were fixed for the life of the install.
+     */
+    fun onPolicyChanged() {
+        AgentScheduler.apply(appContext, deviceRepository.cachedPolicy())
+        sync()
+    }
 
     fun start() {
         if (!LocationPermissions.hasForeground(appContext)) {

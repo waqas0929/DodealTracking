@@ -45,7 +45,9 @@ class CommandExecutor(
     private suspend fun run(command: DeviceCommand): Pair<CommandStatus, String> = when (command.type) {
         CommandType.REFRESH_POLICY, CommandType.SYNC_NOW -> {
             val outcome = deviceRepository.syncPolicy()
-            locationController.sync()
+            // Not sync(): a policy may have changed the heartbeat or flush cadence, and those are
+            // scheduled work, not the location session.
+            locationController.onPolicyChanged()
             val detail = when (outcome) {
                 is PolicyOutcome.Synced -> "policy v${outcome.policy.policyVersion}"
                 is PolicyOutcome.ServedFromCache -> "cache (${outcome.reason})"

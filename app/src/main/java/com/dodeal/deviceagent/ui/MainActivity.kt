@@ -16,7 +16,7 @@ import com.dodeal.deviceagent.ui.login.LoginViewModel
 import com.dodeal.deviceagent.ui.status.StatusScreen
 import com.dodeal.deviceagent.ui.status.StatusViewModel
 import com.dodeal.deviceagent.ui.theme.DodealTheme
-import com.dodeal.deviceagent.work.TelemetryScheduler
+import com.dodeal.deviceagent.work.AgentScheduler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                         LoginScreen(
                             viewModel = vm,
                             onLoggedIn = { username ->
-                                TelemetryScheduler.schedule(this@MainActivity)
+                                AgentScheduler.apply(this@MainActivity, container.deviceRepository.cachedPolicy())
                                 TrackingServiceStarter.start(this@MainActivity)
                                 sessionUsername = username
                                 loggedIn = true

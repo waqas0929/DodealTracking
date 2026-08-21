@@ -6,8 +6,7 @@ import android.content.Intent
 import com.dodeal.deviceagent.DodealAgentApp
 import com.dodeal.deviceagent.diagnostics.TrackLog
 import com.dodeal.deviceagent.location.TrackingServiceStarter
-import com.dodeal.deviceagent.work.LocationFlushWorker
-import com.dodeal.deviceagent.work.TelemetryScheduler
+import com.dodeal.deviceagent.work.AgentScheduler
 
 /**
  * Boot / update entry point. Its ONE job that matters: synchronously start the persistent location
@@ -35,10 +34,10 @@ class BootCompletedReceiver : BroadcastReceiver() {
         try {
             val container = (context.applicationContext as DodealAgentApp).container
 
-            // Upload/retry loop (WorkManager) — reliability only, not the tracking lifeline.
-            LocationFlushWorker.schedule(context)
+            // Every periodic job, scheduled from the policy in force — reliability only, not the
+            // tracking lifeline.
+            AgentScheduler.apply(context, container.deviceRepository.cachedPolicy())
             if (container.deviceRepository.isRegistered()) {
-                TelemetryScheduler.schedule(context)
                 // Start the persistent FGS directly and immediately.
                 TrackingServiceStarter.start(context)
             } else {
