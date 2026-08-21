@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+        PRIVILEGED / SYSTEM permission for silent installs via PackageInstaller. It is only granted
+        when this app is a priv-app on the firmware allowlist; a normal /data/app install cannot get
+        it (and cannot install silently). Declared here; granted by the ROM privapp allowlist.
+    -->
+    <uses-permission android:name="android.permission.INSTALL_PACKAGES"
+        tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:name=".UpdaterApp"
+        android:allowBackup="false"
+        android:label="Dodeal Updater"
+        android:supportsRtl="true">
+
+        <receiver
+            android:name=".boot.UpdaterBootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- PackageInstaller commit status callbacks arrive here. -->
+        <receiver
+            android:name=".install.InstallResultReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+    </application>
+</manifest>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        DEBUG builds only. The local mock server is plain http://, which Android blocks by default.
+        This merges into the debug APK so you can test against the mock over the LAN. The release
+        build stays https-only.
+    -->
+    <application android:usesCleartextTraffic="true" />
+</manifest>

@@ -1,0 +1,27 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+/build
+/app/build
+/captures
+.DS_Store
+
+# --- Signing material (NEVER commit) ---
+keystore.properties
+*.jks
+*.keystore
+*.p12
+release/
+signing/
+
+# --- Build output (never committed) ---
+*.apk
+*.aab
+/updater/build
+.kotlin/
+
+# --- Test artefacts (never committed, never left on the Mac) ---
+/app/build/reports/
+/app/build/test-results/
+/screenshots/

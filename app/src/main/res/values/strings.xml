@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dodeal Tracking</string>
+    <string name="tracking_channel_name">Location tracking</string>
+    <string name="tracking_channel_desc">Shown while the company device reports location during working hours.</string>
+    <string name="tracking_notification_title">Dodeal Tracking</string>
+    <string name="tracking_notification_text">Company device location service is active.</string>
+</resources>
