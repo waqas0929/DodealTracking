@@ -32,13 +32,21 @@ echo "▸ JDK: $("${JAVA_HOME}/bin/java" -version 2>&1 | head -1)"
 
 # `sh gradlew` rather than ./gradlew: the source arrives as a download, and macOS
 # quarantines it, which makes the executable bit unusable until xattr is cleared.
+# Our own flags must never reach Gradle — passing --apk straight through made
+# Gradle fail on an unknown option, which looked exactly like a broken build.
+WANT_APK=0
+GRADLE_ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == "--apk" ]]; then WANT_APK=1; else GRADLE_ARGS+=("$arg"); fi
+done
+
 echo "▸ Unit tests"
-sh gradlew :app:testDebugUnitTest "$@" --console=plain | tail -5
+sh gradlew :app:testDebugUnitTest ${GRADLE_ARGS[@]+"${GRADLE_ARGS[@]}"} --console=plain | tail -5
 
 echo "▸ Compile check (main + test sources)"
 sh gradlew :app:compileDebugKotlin :app:compileDebugUnitTestKotlin --console=plain -q
 
-if [[ "${1:-}" == "--apk" ]]; then
+if [[ "$WANT_APK" == "1" ]]; then
     echo "▸ Debug APK"
     sh gradlew :app:assembleDebug --console=plain -q
     echo "  app/build/outputs/apk/debug/app-debug.apk"
