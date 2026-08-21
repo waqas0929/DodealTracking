@@ -40,7 +40,15 @@ object EnvironmentConfig {
         )
     }
 
+    /**
+     * Resolve the build's environment name.
+     *
+     * Falls back to PRODUCTION, not STAGING. The old default failed the wrong way: STAGING sets
+     * LoggingLevel.BODY, so an empty or misspelled AGENT_ENVIRONMENT would have written full
+     * request and response bodies — bearer token on every call, password on login — into logcat on
+     * whatever build hit it. An unknown environment must land on the quiet, strict one.
+     */
     fun fromName(name: String?): Environment =
         Environment.entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
-            ?: Environment.STAGING
+            ?: Environment.PRODUCTION
 }
