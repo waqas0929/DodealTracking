@@ -49,7 +49,14 @@ sh gradlew :app:compileDebugKotlin :app:compileDebugUnitTestKotlin --console=pla
 if [[ "$WANT_APK" == "1" ]]; then
     echo "▸ Debug APK"
     sh gradlew :app:assembleDebug --console=plain -q
-    echo "  app/build/outputs/apk/debug/app-debug.apk"
+    # The project sets archivesName, so the file is NOT app-debug.apk. Printing a
+    # path that does not exist is how a green run still leaves you with nothing.
+    apk="$(find app/build/outputs/apk/debug -name '*.apk' -maxdepth 1 | head -1)"
+    if [[ -z "$apk" ]]; then
+        echo "  ✗ no APK produced"
+        exit 1
+    fi
+    echo "  $apk ($(du -h "$apk" | cut -f1))"
 fi
 
 python3 - <<'PY'
