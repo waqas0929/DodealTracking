@@ -18,8 +18,12 @@ android {
         applicationId = "com.dodeal.deviceagent"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        // Bumped from the team's 1.0.0 (code 1). Their build and this one are materially
+        // different apps — command contract, policy-driven cadence, permissions, UI — and a build
+        // that cannot be told apart from the one it replaces is a support problem waiting to
+        // happen. A higher versionCode is also what makes any future in-place update possible.
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     // Production release signing — Dodeal Tracking has its OWN permanent signing identity (separate

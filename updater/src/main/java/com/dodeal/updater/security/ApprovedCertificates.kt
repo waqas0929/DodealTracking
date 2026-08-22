@@ -16,9 +16,20 @@ package com.dodeal.updater.security
 object ApprovedCertificates {
 
     val APPROVED_PACKAGES: Map<String, String> = mapOf(
-        "com.dodeal.deviceagent" to "",  // <TRACKING_CERT_SHA256>
-        "com.dodeal.callrecorder" to "", // <ACR_CERT_SHA256>
-        "com.phonemaskapp" to "",        // <DIALER_CERT_SHA256>
+        // Dodeal Tracking, signed 2026-08-22 with the permanent dodeal-tracking key
+        // (CN=Dodeal Technologies …, RSA 4096). Verified from the release APK itself with
+        // `apksigner verify --print-certs`, not copied from a note.
+        "com.dodeal.deviceagent" to "5de94c803b8a17579faa06db265ef96b2396ac31c2f9372ccd34e1a999532c99",
+
+        // DELIBERATELY BLANK. The shipped APKs for both of these are signed
+        // `CN=Android Debug` — the platform's shared debug key, which is per-machine and not an
+        // identity anyone should pin. Pinning it here would bless the debug key as their
+        // production identity for ever. Each needs its own permanent key first
+        // (scripts/generate-dodeal-keystore.sh dodeal-acr / dodeal-dialer), a release build with
+        // it, and then its fingerprint pinned here. Until then the verifier falls back to
+        // "must match the currently-installed cert", which still blocks a foreign APK.
+        "com.dodeal.callrecorder" to "", // needs a real dodeal-acr key
+        "com.phonemaskapp" to "",        // needs a real dodeal-dialer key
     )
 
     /** True if this package is managed by the updater at all. */

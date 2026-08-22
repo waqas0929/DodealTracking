@@ -25,3 +25,5 @@ signing/
 /app/build/reports/
 /app/build/test-results/
 /screenshots/
+config.bat
+node_modules
