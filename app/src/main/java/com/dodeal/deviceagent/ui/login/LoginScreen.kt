@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +25,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, onLoggedIn: (String) -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(state.loggedInUsername) {
         state.loggedInUsername?.let(onLoggedIn)
@@ -79,12 +84,20 @@ fun LoginScreen(viewModel: LoginViewModel, onLoggedIn: (String) -> Unit) {
             modifier = Modifier.padding(top = 6.dp, bottom = 28.dp),
         )
 
+        // Next / Next / Done, so the whole form is typed without reaching for another field.
+        // Without an imeAction every field ended on a plain Enter and the agent had to tap the
+        // next box — with the keyboard covering it.
         OutlinedTextField(
             value = state.clientId,
             onValueChange = viewModel::onClientId,
             label = { Text("Client ID") },
             singleLine = true,
             enabled = !state.loading,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -94,6 +107,8 @@ fun LoginScreen(viewModel: LoginViewModel, onLoggedIn: (String) -> Unit) {
             label = { Text("Login ID") },
             singleLine = true,
             enabled = !state.loading,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,7 +121,15 @@ fun LoginScreen(viewModel: LoginViewModel, onLoggedIn: (String) -> Unit) {
             singleLine = true,
             enabled = !state.loading,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done,
+            ),
+            // Done submits. A sign-in button below the keyboard is a button nobody can reach.
+            keyboardActions = KeyboardActions(onDone = {
+                focusManager.clearFocus()
+                if (state.canSubmit) viewModel.submit()
+            }),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,7 +149,7 @@ fun LoginScreen(viewModel: LoginViewModel, onLoggedIn: (String) -> Unit) {
 
         Button(
             onClick = viewModel::submit,
-            enabled = !state.loading,
+            enabled = state.canSubmit,
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,

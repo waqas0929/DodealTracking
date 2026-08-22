@@ -23,7 +23,12 @@ class LocationController(
 
     fun shouldTrack(): Boolean = decision().isActive
 
-    fun sync() { if (shouldTrack()) start() else stop() }
+    /**
+     * Start or stop the service to match the policy. Note this asks serviceShouldRun, NOT
+     * shouldTrack: a device still waiting for its first policy keeps the service alive so the
+     * fetch can finish — stopping it there cancelled that fetch and left the handset stuck.
+     */
+    fun sync() { if (decision().serviceShouldRun) start() else stop() }
 
     /**
      * Apply everything a freshly fetched policy implies: the background cadence AND the location

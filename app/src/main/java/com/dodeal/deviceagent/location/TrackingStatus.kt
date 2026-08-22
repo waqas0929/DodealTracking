@@ -19,6 +19,19 @@ enum class TrackingState {
 /** The state plus a sentence a person can act on. */
 data class TrackingDecision(val state: TrackingState, val detail: String) {
     val isActive: Boolean get() = state == TrackingState.ACTIVE
+
+    /**
+     * "Not yet", as opposed to "no".
+     *
+     * The service is what fetches the first policy, so stopping it because no policy has arrived
+     * cancels the very request that would have produced one — a startup deadlock that showed up on
+     * a real handset as POLICY_SYNC_FAILED (Job was cancelled) immediately after SERVICE_DESTROYED.
+     * The service must stay alive through this state; the gate still keeps GPS switched off.
+     */
+    val isAwaitingPolicy: Boolean get() = state == TrackingState.WAITING_FOR_POLICY
+
+    /** Should the location service be running at all (even if it is not reading GPS)? */
+    val serviceShouldRun: Boolean get() = isActive || isAwaitingPolicy
 }
 
 /**

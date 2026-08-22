@@ -117,6 +117,26 @@ class TrackingStatusTest {
     }
 
     @Test
+    fun `a device still waiting for its first policy keeps the service alive`() {
+        val waiting = TrackingStatus.decide(true, true, null, insideTheDay)
+
+        assertEquals(TrackingState.WAITING_FOR_POLICY, waiting.state)
+        // The service is what fetches the policy. Stopping it here cancelled that fetch — the
+        // handset logged POLICY_SYNC_FAILED (Job was cancelled) right after SERVICE_DESTROYED.
+        assertTrue(waiting.serviceShouldRun)
+        assertTrue("but it must not read GPS yet", !waiting.isActive)
+    }
+
+    @Test
+    fun `a settled no stops the service`() {
+        listOf(
+            TrackingStatus.decide(true, true, policy(enabled = false), insideTheDay),
+            TrackingStatus.decide(true, true, policy(), karachiJustBeforeStart),
+            TrackingStatus.decide(false, true, policy(), insideTheDay),
+        ).forEach { assertTrue("${it.state} must not keep the service running", !it.serviceShouldRun) }
+    }
+
+    @Test
     fun `a non-working day is named as one`() {
         val sundayOff = policy(
             hours = weekOf("10:00", "19:00") + ("saturday" to WorkingWindow(enabled = false)),

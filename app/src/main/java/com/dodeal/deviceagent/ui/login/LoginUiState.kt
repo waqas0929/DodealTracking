@@ -7,4 +7,8 @@ data class LoginUiState(
     val loading: Boolean = false,
     val error: String? = null,
     val loggedInUsername: String? = null, // non-null => navigate to status
-)
+) {
+    /** All three fields present and nothing in flight — the same rule the button uses. */
+    val canSubmit: Boolean
+        get() = !loading && clientId.isNotBlank() && loginId.isNotBlank() && password.isNotBlank()
+}
