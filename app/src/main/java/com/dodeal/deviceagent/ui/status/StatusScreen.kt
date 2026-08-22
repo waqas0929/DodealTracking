@@ -51,12 +51,26 @@ fun StatusScreen(viewModel: StatusViewModel, onOpenDiagnostics: () -> Unit = {})
 
     // Tracking starts automatically; we only need to make sure location permission is granted.
     // Request it silently on first open if it isn't already (no button, no user action needed).
-    val permissionLauncher = rememberLauncherForActivityResult(
+    // Two launchers, because Android will not grant background location in the same prompt as
+    // foreground: asking for both at once gets the whole request denied. Background is asked for
+    // only once foreground has been granted, which is the order the platform requires.
+    val backgroundLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { granted ->
+        val fineGranted = granted[android.Manifest.permission.ACCESS_FINE_LOCATION] == true
+        if (fineGranted && !LocationPermissions.hasBackground(context)) {
+            backgroundLauncher.launch(LocationPermissions.backgroundRequest())
+        }
+    }
     LaunchedEffect(Unit) {
         if (!LocationPermissions.hasForeground(context)) {
             permissionLauncher.launch(LocationPermissions.foregroundRequest())
+        } else if (!LocationPermissions.hasBackground(context)) {
+            // Foreground was granted on an earlier run; the second half was never asked for.
+            backgroundLauncher.launch(LocationPermissions.backgroundRequest())
         }
         // Connect on open. "Sync now" stays, but as an override — a tracking device that only
         // reaches the server when somebody remembers to tap a button is not a tracking device.
