@@ -10,7 +10,6 @@ interface DeviceRepository {
     suspend fun login(companyId: String, username: String, password: String): LoginOutcome
 
     /** Drop the current agent's session (clears tokens); the UI returns to the login screen. */
-    fun logout()
 
     suspend fun ensureRegistered(): RegistrationOutcome
     suspend fun syncPolicy(): PolicyOutcome

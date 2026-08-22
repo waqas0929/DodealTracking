@@ -25,10 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dodeal.deviceagent.health.DeviceHealth
 import com.dodeal.deviceagent.health.DeviceHealthProvider
@@ -127,16 +129,37 @@ private fun Sync(label: String, synced: Boolean, stale: Boolean, last: Boolean =
     Line(label, text, color, last)
 }
 
+/**
+ * One diagnostic line.
+ *
+ * Both sides are weighted and the value is right-aligned. With SpaceBetween and two unconstrained
+ * Texts, the long values on this screen — the ROM build string, "location permission missing" —
+ * ran straight into their labels with no gap, which is how it looked on a real S23.
+ */
 @Composable
 private fun Line(label: String, value: String, valueColor: Color, last: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top,
     ) {
-        Text(label, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
-        Text(value, color = valueColor, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+        Text(
+            label,
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            value,
+            modifier = Modifier.weight(1.3f),
+            color = valueColor,
+            fontFamily = FontFamily.Monospace,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.End,
+        )
     }
     if (!last) HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 }

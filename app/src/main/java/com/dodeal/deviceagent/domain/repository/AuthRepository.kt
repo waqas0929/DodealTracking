@@ -63,6 +63,9 @@ class AuthRepositoryImpl(
             when (val res = deviceApi.tenantLogin(loginId.trim(), password)) {
                 is ApiResult.Success -> {
                     authProvider.onRegistered(res.data)
+                    // Remembered so "Assigned User" survives a restart; without it the status
+                    // screen fell back to the numeric device id.
+                    tenantStore.saveUsername(loginId.trim())
                     AgentLog.i(AgentLog.Category.AUTH, "login success")
                     LoginOutcome.Success(res.data.deviceId)
                 }

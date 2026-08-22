@@ -207,26 +207,34 @@ class LocationForegroundService : Service() {
 
     private fun policy(): DevicePolicy? = app.container.deviceRepository.cachedPolicy()
 
-    private fun shouldTrackNow(policy: DevicePolicy?): Boolean {
-        if (!app.container.deviceRepository.isRegistered()) return false
-        if (policy == null) return true // bootstrap until CRM policy arrives
-        if (!policy.trackingEnabled) return false
-        if (policy.isHardStale()) return false
-        return WorkingHoursGate.isWithinWorkingHours(policy)
-    }
+    private fun decide(policy: DevicePolicy?): TrackingDecision = TrackingStatus.decide(
+        registered = app.container.deviceRepository.isRegistered(),
+        hasLocationPermission = LocationPermissions.hasForeground(this),
+        policy = policy,
+    )
 
     private fun evaluateGate() {
         val policy = policy()
-        if (shouldTrackNow(policy)) {
+        val decision = decide(policy)
+
+        if (decision.isActive) {
             startTrackingIfNeeded(policy)
-        } else {
-            if (mode != Mode.NONE) TrackLog.i("TRACKING_DISABLED_BY_POLICY")
-            AgentHealthState.sessionState.value =
-                if (policy?.trackingEnabled == false) LocationSessionState.OUTSIDE_WORKING_HOURS
-                else LocationSessionState.WAITING_FOR_POLICY
-            stopAllUpdates()
-            scope.launch { runCatching { app.container.locationRepository.flush() } }
+            return
         }
+
+        // Say WHY, every time, not only when the engine happened to be running. Silence here is
+        // what made a handset that was simply outside its working day look like a broken one.
+        TrackLog.i("TRACKING_HELD state=${decision.state} reason=${decision.detail}")
+
+        AgentHealthState.sessionState.value = when (decision.state) {
+            TrackingState.OUTSIDE_WORKING_HOURS -> LocationSessionState.OUTSIDE_WORKING_HOURS
+            TrackingState.WAITING_FOR_POLICY -> LocationSessionState.WAITING_FOR_POLICY
+            TrackingState.NOT_ENROLLED -> LocationSessionState.STOPPED
+            else -> LocationSessionState.ERROR
+        }
+
+        stopAllUpdates()
+        scope.launch { runCatching { app.container.locationRepository.flush() } }
     }
 
     // --- Tracking-engine lifecycle ----------------------------------------------------------

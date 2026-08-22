@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
                                 locationController = container.locationController,
                                 locationRepository = container.locationRepository,
                                 deviceInfoProvider = container.deviceInfoProvider,
+                                tenantStore = container.tenantStore,
                                 runtimeMode = container.lifecycleStrategy.mode.name,
                                 sessionUsername = sessionUsername,
                             ),

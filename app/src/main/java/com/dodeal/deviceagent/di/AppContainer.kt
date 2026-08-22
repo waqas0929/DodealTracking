@@ -74,7 +74,9 @@ class AppContainer(context: Context) {
     private val tokenStorage: SecureTokenStorage = EncryptedTokenStorage(appContext)
     private val policyStore: PolicyStore = FilePolicyStore(appContext)
     private val authProvider: AuthProvider = BearerTokenAuthProvider(tokenStorage)
-    private val tenantStore: TenantStore = PrefsTenantStore(appContext)
+    // Public: the status screen reads the signed-in login id from here, so the name shown as
+    // "Assigned User" survives a restart.
+    val tenantStore: TenantStore = PrefsTenantStore(appContext)
 
     // --- Network stack (confined here) ------------------------------------------------------
     val deviceUidProvider: DeviceUidProvider by lazy { DeviceUidProvider(appContext) }
@@ -171,6 +173,9 @@ class AppContainer(context: Context) {
                 currentLocation = currentLocationProvider,
                 deviceState = deviceStateProvider,
             ),
+            // A policy the server said had changed has just been re-fetched: rebuild the tracking
+            // session and the background cadence on it, without the user pressing anything.
+            onPolicyChanged = { locationController.onPolicyChanged() },
         )
     }
 

@@ -33,6 +33,17 @@ data class DeviceEvent(
 )
 
 /**
+ * What the server told the device when it checked in. Acting on this is what turns a fixed polling
+ * loop into a device that reacts: nothing to do costs one request, and a policy edited in the CRM
+ * lands on the next beat.
+ */
+data class HeartbeatAck(
+    val policyChanged: Boolean = false,
+    val hasPendingCommands: Boolean = false,
+    val policyVersion: String? = null,
+)
+
+/**
  * Fixed, safe management command set. No arbitrary/remote execution.
  *
  * The wire names come from the SERVER's allow-list (config/device_tracking.php); where the two

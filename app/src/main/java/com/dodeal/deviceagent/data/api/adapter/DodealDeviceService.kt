@@ -6,6 +6,7 @@ import com.dodeal.deviceagent.data.api.dto.DodealCommandListResponse
 import com.dodeal.deviceagent.data.api.dto.DodealEventRequest
 import com.dodeal.deviceagent.data.api.dto.DodealGeofenceEventRequest
 import com.dodeal.deviceagent.data.api.dto.DodealHeartbeatRequest
+import com.dodeal.deviceagent.data.api.dto.DodealHeartbeatResponse
 import com.dodeal.deviceagent.data.api.dto.DodealAddLocationRequest
 import com.dodeal.deviceagent.data.api.dto.DodealBatchLocationsRequest
 import com.dodeal.deviceagent.data.api.dto.DodealLoginRequest
@@ -54,7 +55,7 @@ internal interface DodealDeviceService {
     suspend fun uploadLocationBatch(@Body body: DodealBatchLocationsRequest): Response<Unit>
 
     @POST("device/heartbeat")
-    suspend fun heartbeat(@Body body: DodealHeartbeatRequest): Response<Unit>
+    suspend fun heartbeat(@Body body: DodealHeartbeatRequest): Response<DodealHeartbeatResponse>
 
     @POST("device/events")
     suspend fun sendEvent(@Body body: DodealEventRequest): Response<Unit>

@@ -15,6 +15,7 @@ import com.dodeal.deviceagent.domain.model.DeviceEvent
 import com.dodeal.deviceagent.domain.model.DevicePolicy
 import com.dodeal.deviceagent.domain.model.GeofenceEvent
 import com.dodeal.deviceagent.domain.model.Heartbeat
+import com.dodeal.deviceagent.domain.model.HeartbeatAck
 import com.dodeal.deviceagent.domain.model.LocationPoint
 import com.dodeal.deviceagent.domain.model.LoginRequest
 import com.dodeal.deviceagent.domain.model.MeetingCheckin
@@ -86,8 +87,14 @@ internal class DodealApiAdapter(
         )
 
 
-    override suspend fun sendHeartbeat(heartbeat: Heartbeat): ApiResult<Unit> =
-        safeApiCall({ service.heartbeat(TelemetryMapper.toDto(heartbeat)) }, { })
+    override suspend fun sendHeartbeat(heartbeat: Heartbeat): ApiResult<HeartbeatAck> =
+        safeApiCall({ service.heartbeat(TelemetryMapper.toDto(heartbeat)) }) { body ->
+            HeartbeatAck(
+                policyChanged = body?.policyChanged ?: false,
+                hasPendingCommands = body?.hasPendingCommands ?: false,
+                policyVersion = body?.policyVersion,
+            )
+        }
 
     override suspend fun sendEvent(event: DeviceEvent): ApiResult<Unit> =
         safeApiCall({ service.sendEvent(TelemetryMapper.toDto(event)) }, { })

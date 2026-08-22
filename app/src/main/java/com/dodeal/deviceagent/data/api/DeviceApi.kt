@@ -6,6 +6,7 @@ import com.dodeal.deviceagent.domain.model.DeviceEvent
 import com.dodeal.deviceagent.domain.model.DevicePolicy
 import com.dodeal.deviceagent.domain.model.GeofenceEvent
 import com.dodeal.deviceagent.domain.model.Heartbeat
+import com.dodeal.deviceagent.domain.model.HeartbeatAck
 import com.dodeal.deviceagent.domain.model.LocationPoint
 import com.dodeal.deviceagent.domain.model.LoginRequest
 import com.dodeal.deviceagent.domain.model.MeetingCheckin
@@ -41,7 +42,7 @@ interface DeviceApi {
     /** Bulk upload of buffered offline fixes via POST /api/device/locations (server cap 500). */
     suspend fun uploadLocationBatch(points: List<LocationPoint>): ApiResult<Unit>
 
-    suspend fun sendHeartbeat(heartbeat: Heartbeat): ApiResult<Unit>
+    suspend fun sendHeartbeat(heartbeat: Heartbeat): ApiResult<HeartbeatAck>
     suspend fun sendEvent(event: DeviceEvent): ApiResult<Unit>
 
     suspend fun getCommands(deviceId: String): ApiResult<List<DeviceCommand>>

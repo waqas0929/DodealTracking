@@ -22,6 +22,15 @@ interface AuthProvider {
     /** Persist rotated credentials after a token refresh. Defaults to the same path as registration. */
     fun onCredentialsRenewed(credentials: DeviceCredentials) = onRegistered(credentials)
 
-    /** Invoked when the server rejects our credentials (401): clear + flag for re-registration. */
-    fun onUnauthorized()
+    /*
+     * There is deliberately NO way to clear credentials.
+     *
+     * This is a company-owned tracking handset: the agent carrying it must not be able to sign
+     * out, and nothing in the app may drop the session on its behalf. A 401 is logged and the
+     * enrolment is kept (see AuthInterceptor) — dropping it would land the phone on a login screen
+     * in someone's pocket, where nobody would ever sign in again and tracking would simply stop
+     * with no trace of why.
+     *
+     * Re-enrolment is a deliberate act: clear the app's storage from Android's App info screen.
+     */
 }

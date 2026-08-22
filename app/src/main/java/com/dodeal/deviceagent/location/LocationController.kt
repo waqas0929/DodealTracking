@@ -14,13 +14,14 @@ class LocationController(
     private val appContext: Context,
     private val deviceRepository: DeviceRepository,
 ) {
-    fun shouldTrack(): Boolean {
-        val policy = deviceRepository.cachedPolicy() ?: return false
-        return deviceRepository.isRegistered() &&
-            policy.trackingEnabled &&
-            !policy.isHardStale() &&
-            LocationPermissions.hasForeground(appContext)
-    }
+    /** The full answer, reason included. */
+    fun decision(): TrackingDecision = TrackingStatus.decide(
+        registered = deviceRepository.isRegistered(),
+        hasLocationPermission = LocationPermissions.hasForeground(appContext),
+        policy = deviceRepository.cachedPolicy(),
+    )
+
+    fun shouldTrack(): Boolean = decision().isActive
 
     fun sync() { if (shouldTrack()) start() else stop() }
 

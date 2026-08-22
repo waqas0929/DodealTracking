@@ -40,9 +40,4 @@ class BearerTokenAuthProvider(
         runCatching { storage.save(credentials) }
     }
 
-    override fun onUnauthorized() {
-        cached = null
-        loaded = true
-        runCatching { storage.clear() }
-    }
 }

@@ -1,6 +1,9 @@
 package com.dodeal.deviceagent.ui.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +45,12 @@ fun LoginScreen(viewModel: LoginViewModel, onLoggedIn: (String) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 28.dp),
+            // The keyboard covers the lower half of this screen, and the form was centred in a
+            // fixed-height column — so on a shorter phone the password field and the button sat
+            // under the keyboard with no way to reach them. Scroll + imePadding fixes both.
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+            .padding(horizontal = 28.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

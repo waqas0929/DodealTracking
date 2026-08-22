@@ -24,6 +24,23 @@ data class DodealHeartbeatRequest(
     @SerialName("offline_queue_size") val offlineQueueSize: Int,
 )
 
+/**
+ * The heartbeat's ANSWER, which the agent used to throw away.
+ *
+ * The server replies with more than 200: it says whether the policy the device is running is still
+ * current, and whether anything is queued for it. Reading it is what makes the agent self-driving —
+ * a policy edited in the CRM lands on the next beat instead of waiting for the cache to go stale,
+ * and commands are fetched only when there are any.
+ */
+@Serializable
+data class DodealHeartbeatResponse(
+    @SerialName("success") val success: Boolean = true,
+    @SerialName("policy_version") val policyVersion: String? = null,
+    @SerialName("policy_changed") val policyChanged: Boolean = false,
+    @SerialName("has_pending_commands") val hasPendingCommands: Boolean = false,
+    @SerialName("tracking_enabled") val trackingEnabled: Boolean? = null,
+)
+
 @Serializable
 data class DodealEventRequest(
     @SerialName("event_id") val eventId: String,

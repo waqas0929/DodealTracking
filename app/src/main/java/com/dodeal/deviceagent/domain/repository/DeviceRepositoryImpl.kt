@@ -60,11 +60,6 @@ class DeviceRepositoryImpl(
         }
     }
 
-    override fun logout() {
-        authProvider.onUnauthorized()
-        AgentLog.i(AgentLog.Category.AUTH, "Agent logged out; session cleared")
-    }
-
     /**
      * Guarantees a usable access token before an authenticated call. If the token is near expiry and
      * we hold a refresh token, rotate it silently; the agent never re-enters a password.

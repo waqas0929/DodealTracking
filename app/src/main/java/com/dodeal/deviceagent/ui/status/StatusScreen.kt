@@ -2,7 +2,11 @@ package com.dodeal.deviceagent.ui.status
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,7 +32,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +58,9 @@ fun StatusScreen(viewModel: StatusViewModel, onOpenDiagnostics: () -> Unit = {})
         if (!LocationPermissions.hasForeground(context)) {
             permissionLauncher.launch(LocationPermissions.foregroundRequest())
         }
+        // Connect on open. "Sync now" stays, but as an override — a tracking device that only
+        // reaches the server when somebody remembers to tap a button is not a tracking device.
+        viewModel.syncInBackground()
     }
 
     Scaffold(
@@ -70,6 +82,10 @@ fun StatusScreen(viewModel: StatusViewModel, onOpenDiagnostics: () -> Unit = {})
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // The one thing a person opening this app wants to know, and the reason behind it.
+            // Everything below is detail; this is the answer.
+            TrackingHeroCard(state)
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -83,8 +99,6 @@ fun StatusScreen(viewModel: StatusViewModel, onOpenDiagnostics: () -> Unit = {})
                     StatusRow("Registration", state.registrationStatus)
                     Divider()
                     StatusRow("Server Connection", state.serverConnection)
-                    Divider()
-                    StatusRow("Tracking Status", state.trackingStatus)
                     Divider()
                     StatusRow("Pending Uploads", state.pendingUploads.toString())
                     Divider()
@@ -115,7 +129,7 @@ fun StatusScreen(viewModel: StatusViewModel, onOpenDiagnostics: () -> Unit = {})
                         strokeWidth = 2.dp,
                     )
                 }
-                Text(if (state.loading) "Working…" else "Sync now")
+                Text(if (state.loading) "Syncing…" else "Sync now")
             }
 
             state.message?.let { msg ->
@@ -143,13 +157,82 @@ private fun Divider() = HorizontalDivider(
     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
 )
 
+/**
+ * A label and its value.
+ *
+ * Both sides are weighted and the value is right-aligned. Without that, a long value — the ROM
+ * version is 30 characters — ran straight into the label with no gap at all, which is what the
+ * screen looked like on a real S23.
+ */
 @Composable
 private fun StatusRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top,
     ) {
-        Text(label, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-        Text(value, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            label,
+            // 45/55 in the value's favour. Labels top out at "Server Connection" and fit on one
+            // line; values run to a 30-character ROM build string, which is allowed to wrap.
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            value,
+            modifier = Modifier.weight(1.3f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+/**
+ * "Is it tracking, and if not why not" — stated once, at the top, in the colour of the answer.
+ *
+ * Green only when location is genuinely being recorded. Amber for a pause that is expected and will
+ * end by itself (outside working hours). Red for something a person has to fix.
+ */
+@Composable
+private fun TrackingHeroCard(state: StatusUiState) {
+    val accent = when {
+        state.trackingActive -> Color(0xFF1B873F)
+        state.needsAttention -> MaterialTheme.colorScheme.error
+        else -> Color(0xFFB26B00)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, accent.copy(alpha = 0.35f)),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(accent),
+                )
+                Spacer(Modifier.size(10.dp))
+                Text(
+                    state.trackingStatus,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            if (state.trackingReason.isNotBlank()) {
+                Spacer(Modifier.size(6.dp))
+                Text(
+                    state.trackingReason,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
